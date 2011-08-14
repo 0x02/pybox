@@ -1,0 +1,73 @@
+#!/bin/sh
+
+PATH=/bin:/usr/bin:/sbin:/usr/sbin
+
+TRASH_WRAP=200
+TRASH_PATH='./dir'
+
+init()
+{
+    if [ ! -d $TRASH_PATH ]; then
+	mkdir $TRASH_PATH
+    fi
+
+    if [ $? ]; then
+	exit 1
+    fi
+}
+
+usage()
+{
+    echo 'Usage:'
+    echo -e '-h\tshow this usage'
+    echo -e '\t[file] move the file into trash'
+    echo -e '-c\t[file] compress and move the file into trash'
+    echo -e '-l\tlist all files in the trash, prefixed with an index'
+    echo -e '-d\t[*/1/1 2] drop the file from trash by index or all of them'
+    echo -e '-r\t[*/1/1 2] [path] restore the file to previous path or the specified one'
+    echo ''
+    echo -e 'WRAP=[0/N+]\tspecify the wrap size of trash,'
+    echo -e '\t\tthe oldest files will be removed if out of capacity, '
+    echo -e '\t\t0 means no limit, default size is 200MB'
+    echo -e 'TRASH=[path]\tspecify the path of trash'
+    echo ''
+    echo -e 'Author & Copyright:'
+    echo -e 'Yanhui Shen <shen.elf@gmail.com>'
+    echo -e 'Under the 2-clause BSD license'
+  
+    exit 0
+}
+
+list()
+{
+    ret=`du -sh $TRASH_PATH`
+    set -- $ret
+    usedh=$1
+    ret=`du -sk $TRASH_PATH`
+    set -- $ret
+    usedkb=$1
+    sizekb=$TRASH_WRAP * 1024
+    echo $usedkb
+    echo $sizekb
+    (printf "Path Size Used Capacity\n " ; \
+	printf "%s %sM %s %s\n" $TRASH_PATH $TRASH_WRAP $usedh '40%' ;) |column -t
+    printf "Index File Date Size Type\n"
+}
+
+store()
+{
+}
+
+restore()
+{
+}
+
+drop()
+{
+}
+
+if [ ! init ]; then
+    printf "Failed to init!"
+    exit 1
+fi
+list
