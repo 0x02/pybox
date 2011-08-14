@@ -2,7 +2,7 @@
 
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
 
-TRASH_WRAP=200
+TRASH_WRAP=1
 TRASH_PATH='./dir'
 
 init()
@@ -46,12 +46,21 @@ list()
     ret=`du -sk $TRASH_PATH`
     set -- $ret
     usedkb=$1
-    sizekb=$TRASH_WRAP * 1024
-    echo $usedkb
-    echo $sizekb
+    sizekb=`expr $TRASH_WRAP \* 1024`
+    capacity=`awk 'BEGIN{printf "%.2f%%",'$usedkb'/'$sizekb*100'}'`
     (printf "Path Size Used Capacity\n " ; \
-	printf "%s %sM %s %s\n" $TRASH_PATH $TRASH_WRAP $usedh '40%' ;) |column -t
-    printf "Index File Date Size Type\n"
+	printf "%s %sM %s %s\n" $TRASH_PATH $TRASH_WRAP $usedh $capacity ;) | column -t
+    
+    ret=`ls $TRASH_PATH`
+    index=1
+    filelist="Index File Date Size Type From" 
+    for name in $ret; do
+	#row=`printf "%d %s %s %s %s %s\n" $index $name "2010.8.9" "100" "type" "from"`
+	row=$index' '$name' '"2010.8.9"' '"100"' '"type"' '"from"
+	filelist=$filelist'\n'$row'\n'
+	index=`expr $index \+ 1` 
+    done
+    (echo -e $filelist) | column -t
 }
 
 store()
@@ -70,4 +79,6 @@ if [ ! init ]; then
     printf "Failed to init!"
     exit 1
 fi
+
 list
+
