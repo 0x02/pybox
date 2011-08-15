@@ -65,14 +65,17 @@ list()
 
 store()
 {
+    echo "store"
 }
 
 restore()
 {
+    echo "store"
 }
 
 drop()
 {
+    echo "store"
 }
 
 if [ ! init ]; then
