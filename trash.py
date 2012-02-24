@@ -86,7 +86,7 @@ def TrashList():
 		cols.append(oldPath)
 		table.append(cols)
 
-	ColPrint(table, 2)
+	ColPrint(table, 2, [1, 2, 1, 1, 1])
 
 # Delete items from trash.
 def TrashDelete():
@@ -152,10 +152,13 @@ if arg == '-s':
     TrashStatus()
 elif arg == '-l':
     TrashList()
-elif arg == '-a' and len(sys.argv) > 2:
-	TrashStore(sys.argv[2:])
-elif arg == '-r':
-    TrashRestore()
+elif len(sys.argv) > 2:
+	if arg == '-a':
+		TrashStore(sys.argv[2:])
+	elif arg == '-r':
+		TrashRestore(sys.argv[2:])
+	elif arg == '-d':
+		TrashDelete(sys.argv[2:])
 elif arg == '-h':
     TrashHelp()
 else:

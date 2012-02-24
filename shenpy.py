@@ -43,7 +43,10 @@ def FileSize(path):
 	else:
 		return os.path.getsize(path)
 
-def ColPrint(table, space=1):
+# Author: Yanhui Shen
+# not support screen width now
+# align only support left(1) or right(2)
+def ColPrint(table, space=1, align=[]):
 	import curses
 	if not table:
 		return
@@ -63,7 +66,17 @@ def ColPrint(table, space=1):
 	for line in table:
 		for idx, col in enumerate(line):
 			colw = len(col)
-			left = colMaxWidth[idx] - colw + space
-			pad = ' ' * left
-			print(col+pad, end='')
+			left = colMaxWidth[idx] - colw
+			leftPad = ' ' * left
+			spacePad = ' ' * space
+			if not align:
+				print(col+leftPad+spacePad, end='')
+			else:
+				if align[idx] == 0:
+					pass
+				elif align[idx] == 1:
+					print(col+leftPad+spacePad, end='')
+				elif align[idx] == 2:
+					print(leftPad+col+spacePad, end='')
+
 		print('')
