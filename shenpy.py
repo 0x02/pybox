@@ -6,7 +6,7 @@ class MsgColor:
     Fail = '\033[91m'
     Endc = '\033[0m'
 
-def HumanReadableSize(bytes):
+def HRSize(bytes):
     bytes = float(bytes)
     if bytes >= 1099511627776:
         terabytes = bytes / 1099511627776
@@ -24,8 +24,8 @@ def HumanReadableSize(bytes):
         size = '%.2fb' % bytes
     return size
     
-import os
-def DirSize(start_path = '.'):
+def DirSize(start_path):
+	import os
 	total_size = 0
 	for dirpath, dirnames, filenames in os.walk(start_path):
 		for f in filenames:
@@ -35,3 +35,35 @@ def DirSize(start_path = '.'):
 			except:
 				continue
 	return total_size
+
+def FileSize(path):
+	import os
+	if os.path.isdir(path):
+		return DirSize(path)
+	else:
+		return os.path.getsize(path)
+
+def ColPrint(table, space=1):
+	import curses
+	if not table:
+		return
+
+	colCount = curses.wrapper(lambda _: curses.tigetnum('cols'))
+	colMaxWidth = []
+
+	# Generate the colMaxWidth
+	for line in table:
+		for idx, col in enumerate(line):
+			colw = len(col)
+			if len(colMaxWidth) <= idx:
+				colMaxWidth.append(colw)
+			elif colw > colMaxWidth[idx]:
+				colMaxWidth[idx] = colw
+
+	for line in table:
+		for idx, col in enumerate(line):
+			colw = len(col)
+			left = colMaxWidth[idx] - colw + space
+			pad = ' ' * left
+			print(col+pad, end='')
+		print('')
