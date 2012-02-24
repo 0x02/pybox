@@ -45,31 +45,33 @@ def trash_init():
 
 # Show trash status.
 def TrashStatus():
-	size = str(DirSize(trash_dir))
+	size = str(FileSize(trash_dir))
 	print('Trash path:\t' + trash_dir)
-	print('Trash size:\t' + HumanReadableSize(size))
+	print('Trash size:\t' + HRSize(size))
 
 # List items in trash.
 def TrashList():
-	print('NO.\t', 'Size\t', 'Date\t\t', 'Z ', 'From')
+	table = [['NO.', 'Size', 'Date', 'Z', 'From']]
 
 	items = os.listdir(trash_dir)
 	for idx, item in enumerate(items):
+		cols = []
+
 		descPath = trash_dir + item + '/desc'
 		desc = open(descPath, mode='r', encoding='utf-8')
 
 		line = desc.readline().strip('\n')
-		date = line[line.find(' '):]
+		date = line[line.find(' ')+1:]
 
 		line = desc.readline().strip('\n')
-		size = line[line.find(' '):]
-		size = HumanReadableSize(size)
+		size = line[line.find(' ')+1:]
+		size = HRSize(size)
 
 		line = desc.readline().strip('\n')
-		oldPath = line[line.find(' '):]
+		oldPath = line[line.find(' ')+1:]
 
 		line = desc.readline().strip('\n')
-		compressed = line[line.find(' '):]
+		compressed = line[line.find(' ')+1:]
 		if bool(compressed):
 			compressed = 'N'
 		else:
@@ -77,11 +79,14 @@ def TrashList():
 
 		desc.close()
 
-		print(idx+1, '\t', \
-				size, '\t', \
-				date, '\t', \
-				compressed, ' ', \
-				oldPath)
+		cols.append(str(idx+1))
+		cols.append(size)
+		cols.append(date)
+		cols.append(compressed)
+		cols.append(oldPath)
+		table.append(cols)
+
+	ColPrint(table, 2)
 
 # Delete items from trash.
 def TrashDelete():
@@ -110,7 +115,7 @@ def TrashStore(argvs):
 		os.mkdir(contentDir, 0o700)
 
 		date = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
-		size = str(os.path.getsize(oldPath))
+		size = str(FileSize(oldPath))
 
 		desc = open(newDir + item_desc, mode='w', encoding='utf-8')
 		desc.write(desc_date + date + '\n')
@@ -121,7 +126,7 @@ def TrashStore(argvs):
 
 		shutil.move(oldPath, contentDir)
 
-		print(MsgColor.OkGreen + 'size:' + MsgColor.Endc, HumanReadableSize(size))
+		print(MsgColor.OkGreen + 'size:' + MsgColor.Endc, HRSize(size))
 
 # Restore items to its previous path.
 def TrashRestore():
