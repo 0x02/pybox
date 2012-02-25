@@ -76,7 +76,7 @@ def TrashList():
 		size = HRSize(size)
 
 		line = desc.readline().strip('\n')
-		oldPath = line[line.find(' ')+1:]
+		oldDir = line[line.find(' ')+1:]
 
 		line = desc.readline().strip('\n')
 		compressed = line[line.find(' ')+1:]
@@ -87,7 +87,7 @@ def TrashList():
 
 		desc.close()
 
-		cols = [str(idx+1), name, size, date, compressed, oldPath]
+		cols = [str(idx+1), name, size, date, compressed, oldDir]
 		table.append(cols)
 
 	ColPrint(table, 2, [1, 1, 2, 1, 1, 1])
@@ -100,7 +100,7 @@ def TrashDelete():
 def TrashStore(argvs):
 	for argv in argvs:
 		oldPath = os.path.abspath(argv)
-		oldDir = os.path.dirname(oldPath)
+		oldDir = os.path.dirname(oldPath) + '/'
 		newDir = trash_dir + uuid.uuid1().hex + '/'
 		contentDir = newDir + item_content
 		
@@ -112,8 +112,9 @@ def TrashStore(argvs):
 			print(MsgColor.Fail + 'Permission denied! ' + MsgColor.Endc + oldPath)
 			continue
 
-		print(MsgColor.OkGreen + 'Storing... ' + MsgColor.Endc + oldPath + \
-			MsgColor.OkGreen + ' -> \n' + MsgColor.Endc + '\t' + newDir, end = '\t')
+		print(oldPath + \
+				MsgColor.OkGreen + ' -> ' + MsgColor.Endc + \
+				newDir, end = ' ')
 
 		os.mkdir(newDir, 0o700)
 		os.mkdir(contentDir, 0o700)
@@ -173,7 +174,7 @@ def TrashRestore(argvs):
 		size = HRSize(size)
 
 		line = desc.readline().strip('\n')
-		oldPath = line[line.find(' ')+1:]
+		oldDir = line[line.find(' ')+1:]
 
 		line = desc.readline().strip('\n')
 		compressed = line[line.find(' ')+1:]
@@ -184,11 +185,11 @@ def TrashRestore(argvs):
 
 		desc.close()
 
-		destDir = oldPath + '/'
+		destDir = oldDir
 		if len(toPath) != 0:
 			destDir= os.path.abspath(toPath) + '/'
 
-		cols = [str(idx+1), name, size, date, compressed, oldPath, destDir]
+		cols = [str(idx+1), name, size, date, compressed, oldDir, destDir]
 		table.append(cols)
 
 	ColPrint(table, 2, [1, 1, 2, 1, 1, 1, 1])
@@ -212,7 +213,7 @@ def TrashRestore(argvs):
 		line = desc.readline().strip('\n')
 		line = desc.readline().strip('\n')
 		line = desc.readline().strip('\n')
-		oldPath = line[line.find(' ')+1:]
+		oldDir = line[line.find(' ')+1:]
 
 		line = desc.readline().strip('\n')
 		#compressed = line[line.find(' ')+1:]
@@ -220,7 +221,7 @@ def TrashRestore(argvs):
 
 		desc.close()
 
-		destDir = oldPath + '/'
+		destDir = oldDir
 		if len(toPath) != 0:
 			destDir= os.path.abspath(toPath) + '/'
 		if (os.path.isdir(destDir) and not os.access(destDir, os.W_OK)) or \
