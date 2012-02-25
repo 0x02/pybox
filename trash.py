@@ -6,7 +6,7 @@ import uuid
 import time
 import shutil
 import string
-from shenpy import *
+from spylib import *
 
 trash_max = 1024
 trash_dir = os.path.expanduser('~/') + 'MyTrash' + '/'
