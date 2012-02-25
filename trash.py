@@ -25,9 +25,9 @@ def TrashHelp():
 			['', '-l', 'List all items in trash.'],\
 			['', '-a', 'Store items to trash.'],\
 			['', '-r [1 2 n] -t [path]', 'Restore items.'],\
+			['', '-d [1 2 n]', 'Delete items from trash.'],\
 			['', '-z [1 2 n]', 'Compress items in trash.'],\
-			['', '-Z [1 2 n]', 'Uncomprress items in trash.'],\
-			['', '-d [1 2 n]', 'Delete items from trash.']]
+			['', '-Z [1 2 n]', 'Uncomprress items in trash.']]
 
 	ColPrint(table)
 
@@ -91,10 +91,6 @@ def TrashList():
 		table.append(cols)
 
 	ColPrint(table, 2, [1, 1, 2, 1, 1, 1])
-
-# Delete items from trash.
-def TrashDelete():
-    pass
 
 # Recycle the given item into trash.
 def TrashStore(argvs):
@@ -196,6 +192,7 @@ def TrashRestore(argvs):
 
 	accept = input('Accept? [y/n] ')
 	if accept.lower() not in ['y', 'yes']:
+		print(MsgColor.Warning + 'Operation was abandoned.' + MsgColor.Endc)
 		return
 
 	for idx, item in enumerate(items):
@@ -226,19 +223,25 @@ def TrashRestore(argvs):
 			destDir= os.path.abspath(toPath) + '/'
 		if (os.path.isdir(destDir) and not os.access(destDir, os.W_OK)) or \
 				os.path.isfile(destDir):
-			print(MsgColor.Fail + "Invaild destination!", MsgColor.Endc)
+			print(MsgColor.Fail + 'NO.' + str(idx+1) + ' Invaild destination!' + MsgColor.Endc)
 			continue
 		if os.path.exists(destDir+name):
-			print(MsgColor.Fail + "File already exists!", MsgColor.Endc)
+			print(MsgColor.Fail + 'NO.' + str(idx+1) + ' File already exists!' + MsgColor.Endc)
 			continue
 
 		if not os.path.exists(destDir):
+			print(MsgColor.Warning + 'Preparing the destination dir...' + MsgColor.Endc)
 			os.makedirs(destDir)
 
 		shutil.move(contentDir+name, destDir+name)
 		os.rmdir(contentDir)
 		os.remove(descPath)
 		os.rmdir(itemDir)
+		print(MsgColor.OkGreen + 'NO.' + str(idx+1) + ' Done!' + MsgColor.Endc)
+
+# Delete items from trash.
+def TrashDelete(argvs):
+    pass
 
 # Compress items from trash.
 def TrashCompress():
