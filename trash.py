@@ -206,7 +206,7 @@ def TrashRestore(argvs):
 		os.rmdir(contentDir)
 		os.remove(descPath)
 		os.rmdir(itemDir)
-		print(MsgColor.OkGreen + 'NO.' + str(idx+1) + ' Done!' + MsgColor.Endc)
+		print(MsgColor.OkGreen + 'NO.' + str(idx+1) + ' restored!' + MsgColor.Endc)
 
 # Delete items from trash.
 def TrashDelete(argvs):
@@ -235,7 +235,7 @@ def TrashDoDelete(index):
 		itemDir = trash_dir + item + '/'
 		shutil.rmtree(itemDir)
 
-		print(MsgColor.OkGreen + 'NO.' + str(idx+1) + ' Done!' + MsgColor.Endc)
+		print(MsgColor.OkGreen + 'NO.' + str(idx+1) + ' deleted!' + MsgColor.Endc)
 
 # Clear items in trash.
 def TrashClear():
