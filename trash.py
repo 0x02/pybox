@@ -145,10 +145,11 @@ def TrashRestore(argvs):
 	items = os.listdir(trash_dir)
 
 	index = []
-	toPath = ''
+	toDir = ''
 	for idx, strIdx in enumerate(argvs):
 		if strIdx == '-t' and len(argvs) > idx+1:
-			toPath = argvs[idx+1]
+			toDir = argvs[idx+1]
+			toDir = os.path.abspath(toDir) + '/'
 			break
 
 		if strIdx.isdigit() and int(strIdx) <= len(items) and int(strIdx) > 0:
@@ -158,9 +159,10 @@ def TrashRestore(argvs):
 	if len(index) <= 0:
 		return
 
-	print(os.path.abspath(toPath))
-
 	TrashDoList(index)
+	if len(toDir) > 0:
+		print('To:' + toDir)
+
 	if not TrashConfirm():
 		return
 
@@ -188,8 +190,9 @@ def TrashRestore(argvs):
 		desc.close()
 
 		destDir = oldDir
-		if len(toPath) != 0:
-			destDir= os.path.abspath(toPath) + '/'
+		if len(toDir) > 0:
+			destDir = toDir
+
 		if (os.path.isdir(destDir) and not os.access(destDir, os.W_OK)) or \
 				os.path.isfile(destDir):
 			print(MsgColor.Fail + 'NO.' + str(idx+1) + ' Invaild destination!' + MsgColor.Endc)
@@ -199,8 +202,13 @@ def TrashRestore(argvs):
 			continue
 
 		if not os.path.exists(destDir):
-			print(MsgColor.Warning + 'Preparing the destination dir...' + MsgColor.Endc)
-			os.makedirs(destDir)
+			print(MsgColor.Warning + 'Preparing destination dir...' + MsgColor.Endc, end='')
+			try:
+				os.makedirs(destDir, 0o700)
+			except:
+				print(MsgColor.Fail + 'Failed!' + MsgColor.Endc)
+				continue
+			print(MsgColor.OkGreen + 'Done!' + MsgColor.Endc)
 
 		shutil.move(contentDir+name, destDir+name)
 		os.rmdir(contentDir)
