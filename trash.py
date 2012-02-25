@@ -26,6 +26,7 @@ def TrashHelp():
 			['', '-a', 'Store items to trash.'],\
 			['', '-r [1 2 n] -t [path]', 'Restore items.'],\
 			['', '-d [1 2 n]', 'Delete items from trash.'],\
+			['', '-c', 'Delete all items in trash.'],\
 			['', '-z [1 2 n]', 'Compress items in trash.'],\
 			['', '-Z [1 2 n]', 'Uncomprress items in trash.']]
 
@@ -56,10 +57,20 @@ def TrashStatus():
 
 # List items in trash.
 def TrashList():
+	items = os.listdir(trash_dir)
+	index = []
+	for idx, item in enumerate(items):
+		index.append(idx)
+	TrashDoList(index)
+
+def TrashDoList(index):
 	table = [['NO.', 'Name', 'Size', 'Date', 'Z', 'From']]
 
 	items = os.listdir(trash_dir)
 	for idx, item in enumerate(items):
+		if idx not in index:
+			continue
+
 		itemDir = trash_dir + item + '/'
 		contentDir = itemDir + item_content + '/'
 
@@ -149,50 +160,8 @@ def TrashRestore(argvs):
 
 	print(os.path.abspath(toPath))
 
-	table = [['NO.', 'Name', 'Size', 'Date', 'Z', 'From', 'To']]
-	for idx, item in enumerate(items):
-		if idx not in index:
-			continue
-
-		itemDir = trash_dir + item + '/'
-		contentDir = itemDir + item_content + '/'
-		descPath = itemDir + item_desc
-
-		name = os.listdir(contentDir)[0]
-
-		desc = open(descPath, mode='r', encoding='utf-8')
-
-		line = desc.readline().strip('\n')
-		date = line[line.find(' ')+1:]
-
-		line = desc.readline().strip('\n')
-		size = line[line.find(' ')+1:]
-		size = HRSize(size)
-
-		line = desc.readline().strip('\n')
-		oldDir = line[line.find(' ')+1:]
-
-		line = desc.readline().strip('\n')
-		compressed = line[line.find(' ')+1:]
-		if compressed.lower() == 'true':
-			compressed = 'Y'
-		else:
-			compressed = 'N'
-
-		desc.close()
-
-		destDir = oldDir
-		if len(toPath) != 0:
-			destDir= os.path.abspath(toPath) + '/'
-
-		cols = [str(idx+1), name, size, date, compressed, oldDir, destDir]
-		table.append(cols)
-
-	ColPrint(table, 2, [1, 1, 2, 1, 1, 1, 1])
-
-	accept = input('Accept? [y/n] ')
-	if accept.lower() not in ['y', 'yes']:
-		print(MsgColor.Warning + 'Operation was abandoned.' + MsgColor.Endc)
+	TrashDoList(index)
+	if not TrashConfirm():
 		return
 
 	for idx, item in enumerate(items):
@@ -241,11 +210,57 @@ def TrashRestore(argvs):
 
 # Delete items from trash.
 def TrashDelete(argvs):
-    pass
+	items = os.listdir(trash_dir)
+	index = []
+	for strIdx in argvs:
+		if strIdx.isdigit() and int(strIdx) <= len(items) and int(strIdx) > 0:
+			index.append(int(strIdx)-1)
+			continue
+	index.sort()
+	if len(index) <= 0:
+		return
+
+	TrashDoList(index)
+	if not TrashConfirm():
+		return
+
+	TrashDoDelete(index)
+
+def TrashDoDelete(index):
+	items = os.listdir(trash_dir)
+	for idx, item in enumerate(items):
+		if idx not in index:
+			continue
+
+		itemDir = trash_dir + item + '/'
+		shutil.rmtree(itemDir)
+
+		print(MsgColor.OkGreen + 'NO.' + str(idx+1) + ' Done!' + MsgColor.Endc)
+
+# Clear items in trash.
+def TrashClear():
+	items = os.listdir(trash_dir)
+	index = []
+	for idx, items in enumerate(items):
+		index.append(idx)
+
+	TrashDoList(index)
+	if not TrashConfirm():
+		return
+
+	TrashDoDelete(index)
 
 # Compress items from trash.
 def TrashCompress():
     pass
+
+def TrashConfirm():
+	accept = input('Accept? [y/n] ')
+	if accept.lower() not in ['y', 'yes']:
+		print(MsgColor.Warning + 'Operation was abandoned.' + MsgColor.Endc)
+		return False
+	else:
+		return True
 
 # Main Function
 if not TrashInit():
@@ -262,6 +277,8 @@ if arg == '-s':
     TrashStatus()
 elif arg == '-l':
     TrashList()
+elif arg == '-c':
+	TrashClear()
 elif len(sys.argv) > 2:
 	if arg == '-a':
 		TrashStore(sys.argv[2:])
