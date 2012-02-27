@@ -47,11 +47,11 @@ def FileSize(path):
 # not support screen width now
 # align only support left(1) or right(2)
 def ColPrint(table, space=1, align=[]):
-	import curses
+	#import curses
 	if not table:
 		return
 
-	colCount = curses.wrapper(lambda _: curses.tigetnum('cols'))
+	#colCount = curses.wrapper(lambda _: curses.tigetnum('cols'))
 	colMaxWidth = []
 
 	# Generate the colMaxWidth
