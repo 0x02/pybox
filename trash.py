@@ -1,4 +1,4 @@
-#!/usr/local/bin/python3.2
+#!/usr/bin/env python3.2
 
 import sys
 import os
