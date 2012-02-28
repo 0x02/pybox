@@ -80,3 +80,8 @@ def ColPrint(table, space=1, align=[]):
 					print(leftPad+col+spacePad, end='')
 
 		print('')
+
+def Sha1File(fileName):
+	import hashlib
+	with open(fileName, 'rb') as f:
+		return hashlib.sha1(f.read()).hexdigest()
