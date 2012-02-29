@@ -1,3 +1,10 @@
+def NewEnumDef(**enums):
+	return type('Enum', (), enums)
+
+def NewEnum(*seq, **named):
+	enums = dict(zip(seq, range(len(seq))), **named)
+	return type('Enum', (), enums)
+
 class MsgColor:
     Header = '\033[95m'
     OkBlue = '\033[94m'
@@ -42,6 +49,30 @@ def FileSize(path):
 		return DirSize(path)
 	else:
 		return os.path.getsize(path)
+
+def DirFiles(yourDir, fnOnError=None):
+	import os
+	files = []
+	for dirpath, dirnames, filenames in os.walk(yourDir, onerror=fnOnError):
+		for f in filenames:
+			files.append(os.path.join(yourDir, f))
+	return files
+
+def KeySortPathLower(fn):
+	return fn.lower().rsplit('/', 1)
+
+# Author: Yanhui Shen
+ErrFileReadable = NewEnum('Ok', 'NotExist', 'PermDenied', 'NotAFile')
+def IsFileReadable(filepath, dirisfile=True):
+	import os
+	if not os.path.exists(filepath):
+		return ErrFileReadable.NotExist
+	if not os.access(filepath, os.R_OK):
+		return ErrFileReadable.PermDenied
+	if (not dirisfile) and (not os.path.isfile(filepath)):
+		return ErrFileReadable.NotAFile
+
+	return ErrFileReadable.Ok
 
 # Author: Yanhui Shen
 # not support screen width now

@@ -77,7 +77,7 @@ def TrashDoList(index):
 		name = os.listdir(contentDir)[0]
 
 		descPath = itemDir + item_desc
-		desc = open(descPath, mode='r', encoding='utf-8')
+		desc = open(descPath, mode='rt', encoding='utf-8')
 
 		line = desc.readline().strip('\n')
 		date = line[line.find(' ')+1:]
