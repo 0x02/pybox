@@ -1,95 +1,111 @@
 #!/usr/bin/env python3.2
 
 from spylib import *
-def Usage():
-	table = [['Usage:', 'synclist -f list -t ./dir'],\
-			['', '-f, --from=', 'The list contains your target files.'],\
-			['', '-t, --to=', 'To which directory.']]
 
-	syplib.ColPrint(table, 2)
+def Usage():
+    table = [['Usage:', 'synclist -f list -t ./dir'],\
+            ['', '-f, --from=', 'The list contains your target files.'],\
+            ['', '-t, --to=', 'To which directory.']]
+
+    syplib.ColPrint(table, 2)
 
 def OnDirFilesError(oserror):
-	print(oserror.filename + MsgColor.Warning + ' Permission denied!' + MsgColor.Endc)
+    print(oserror.filename + MsgColor.Warning + ' Permission denied!' + MsgColor.Endc)
 
-def CheckFileReadable(filepath, dirisfile=True):
-	err = IsFileReadable(filepath, dirisfile=dirisfile)
-	if err == ErrFileReadable.Ok: 
-		return True
+def CheckFileReadable(filepath):
+    err = IsFileReadable(filepath, dirisfile=False)
+    if err == ErrFileReadable.Ok: 
+        return True
 
-	if err == ErrFileReadable.NotExist:
-		print(filepath + MsgColor.Warning + ' File not exists!' + MsgColor.Endc)
-	elif err == ErrFileReadable.PermDenied:
-		print(filepath + MsgColor.Warning + ' Permission denied!' + MsgColor.Endc)
-	elif err == ErrFileReadable.NotAFile:
-		print(filepath + MsgColor.Warning + ' Not a txt file!' + MsgColor.Endc)
+    if err == ErrFileReadable.NotExist:
+        print(filepath + MsgColor.Warning + ' File not exists!' + MsgColor.Endc)
+    elif err == ErrFileReadable.PermDenied:
+        print(filepath + MsgColor.Warning + ' Permission denied!' + MsgColor.Endc)
+    elif err == ErrFileReadable.NotAFile:
+        print(filepath + MsgColor.Warning + ' Not a txt file!' + MsgColor.Endc)
 
-	return False
+    return False
 
-def GetSrcList(fileList):
-	import os
-	# Read vaild src files from txt, expand dir into files.
-	srcList = []
-	with open(fileList, 'rt', encoding='utf-8') as f:
-		for line in f.readlines():
-			line = line.strip()
-			if not CheckFileReadable(line):
-				continue
-		
-			if os.path.isfile(line):
-				srcList.append(line)
-			elif os.path.isdir(line):
-				srcList += DirFiles(line, OnDirFilesError)
+def ExpandAndVaildatePath(pathlist):
+    import os
+    # 1.Expand dir into path.
+    expandedList = []
+    for path in pathlist:
+        if os.path.isfile(path):
+            expandedList.append(path)
+        elif os.path.isdir(path):
+            expandedList += DirFiles(path, OnDirFilesError)
 
-	srcList.sort(key = KeySortPathLower)
-	return srcList
+    # 2.Remove duplicate path.
+    expandedList = [item for item in set(expandedList)]
 
-def SyncList(fileList, toDir):
-	import os
+    # 3.Remove inaccessible path.
+    vaildList = []
+    for path in expandedList:
+        if CheckFileReadable(path):
+            vaildList.append(path)
 
-	if not CheckFileReadable(fileList, dirisfile=False):
-		print(MsgColor.Fail + 'Failed to sync!' + MsgColor.Endc)
-		return
+    # 4.Sort list.
+    vaildList.sort(key = KeySortPathLower)
+    return vaildList
 
-	print(MsgColor.OkGreen + 'Reading file list...' + MsgColor.Endc)
-	srcList = GetSrcList(fileList)
+def SyncCut(pathlist, toDir):
+    print(MsgColor.OkGreen + 'Sync in cut mode...' + MsgColor.Endc)
+    for item in pathlist:
+        print(item)
 
-	if len(srcList) == 0:
-		print(MsgColor.Warning + 'No file to sync!' + MsgColor.Endc)
-		return
+def SyncWithCli(pathlist, toDir):
+    pass
 
-	print(MsgColor.OkGreen + 'Try sync them...' + MsgColor.Endc)
-	for srcItem in srcList:
-		print(srcItem)
+def SyncWithFile(textfile, toDir):
+    import os
+    # Read path in a specified file.
+    if not CheckFileReadable(textfile):
+        print(MsgColor.Fail + 'Failed to sync!' + MsgColor.Endc)
+        return
+
+    print(MsgColor.OkGreen + 'Reading path list...' + MsgColor.Endc)
+    pathlist = None
+    with open(textfile, 'rt', encoding='utf-8') as f:
+        pathlist = [line.strip() for line in f.readlines()]
+
+    pathlist = ExpandAndVaildatePath(pathlist)
+
+    if len(pathlist) == 0:
+        print(MsgColor.Warning + 'Nothing to sync!' + MsgColor.Endc)
+        return
+
+    SyncCut(pathlist, toDir)
 
 def main():
-	import getopt
-	import sys
+    import getopt
+    import sys
 
-	try:
-		optval, args = getopt.getopt(sys.argv[1:], 'f:t:', ['file=', 'to='])
-	except getopt.GetoptError as err:
-		print(MsgColor.Fail + 'Invaild argv!' + MsgColor.Endc)
-		Usage()
-		sys.exit(2)
+    try:
+        optval, args = getopt.getopt(sys.argv[1:], 'f:t:', ['file=', 'to='])
+    except getopt.GetoptError as err:
+        print(MsgColor.Fail + 'Invaild argv!' + MsgColor.Endc)
+        Usage()
+        sys.exit(2)
 
-	if len(optval) != 2:
-		print(MsgColor.Fail + 'Invaild argv!' + MsgColor.Endc)
-		Usage()
-		sys.exit(2)
+    if len(optval) != 2:
+        print(MsgColor.Fail + 'Invaild argv!' + MsgColor.Endc)
+        Usage()
+        sys.exit(2)
 
-	fileList = None
-	toDir = None
-	for opt, val in optval:
-		if opt in ('-f', '--file') and val != '':
-			fileList = val
-		elif opt in ('-t', '--to') and val != '':
-			toDir = val
-		else:
-			print(MsgColor.Fail + 'Invaild argv!' + MsgColor.Endc)
-			Usage()
-			sys.exit(2)
+    fileList = None
+    toDir = None
+    for opt, val in optval:
+        if opt in ('-f', '--file') and val != '':
+            fileList = val
+        elif opt in ('-t', '--to') and val != '':
+            toDir = val
+        else:
+            print(MsgColor.Fail + 'Invaild argv!' + MsgColor.Endc)
+            Usage()
+            sys.exit(2)
 
-	SyncList(fileList, toDir)
+    SyncWithFile(fileList, toDir)
 
 if __name__ == '__main__':
-	main()
+    main()
