@@ -1,9 +1,9 @@
 def NewEnumDef(**enums):
-	return type('Enum', (), enums)
+    return type('Enum', (), enums)
 
 def NewEnum(*seq, **named):
-	enums = dict(zip(seq, range(len(seq))), **named)
-	return type('Enum', (), enums)
+    enums = dict(zip(seq, range(len(seq))), **named)
+    return type('Enum', (), enums)
 
 class MsgColor:
     Header = '\033[95m'
@@ -32,87 +32,87 @@ def HRSize(bytes):
     return size
     
 def DirSize(start_path):
-	import os
-	total_size = 0
-	for dirpath, dirnames, filenames in os.walk(start_path):
-		for f in filenames:
-			try:
-				fp = os.path.join(dirpath, f)
-				total_size += os.path.getsize(fp)
-			except:
-				continue
-	return total_size
+    import os
+    total_size = 0
+    for dirpath, dirnames, filenames in os.walk(start_path):
+        for f in filenames:
+            try:
+                fp = os.path.join(dirpath, f)
+                total_size += os.path.getsize(fp)
+            except:
+                continue
+    return total_size
 
 def FileSize(path):
-	import os
-	if os.path.isdir(path):
-		return DirSize(path)
-	else:
-		return os.path.getsize(path)
+    import os
+    if os.path.isdir(path):
+        return DirSize(path)
+    else:
+        return os.path.getsize(path)
 
 def DirFiles(yourDir, fnOnError=None):
-	import os
-	files = []
-	for dirpath, dirnames, filenames in os.walk(yourDir, onerror=fnOnError):
-		for f in filenames:
-			files.append(os.path.join(yourDir, f))
-	return files
+    import os
+    files = []
+    for dirpath, dirnames, filenames in os.walk(yourDir, onerror=fnOnError):
+        for f in filenames:
+            files.append(os.path.join(dirpath, f))
+    return files
 
 def KeySortPathLower(fn):
-	return fn.lower().rsplit('/', 1)
+    return fn.lower().rsplit('/', 1)
 
 # Author: Yanhui Shen
 ErrFileReadable = NewEnum('Ok', 'NotExist', 'PermDenied', 'NotAFile')
 def IsFileReadable(filepath, dirisfile=True):
-	import os
-	if not os.path.exists(filepath):
-		return ErrFileReadable.NotExist
-	if not os.access(filepath, os.R_OK):
-		return ErrFileReadable.PermDenied
-	if (not dirisfile) and (not os.path.isfile(filepath)):
-		return ErrFileReadable.NotAFile
+    import os
+    if not os.path.exists(filepath):
+        return ErrFileReadable.NotExist
+    if not os.access(filepath, os.R_OK):
+        return ErrFileReadable.PermDenied
+    if (not dirisfile) and (not os.path.isfile(filepath)):
+        return ErrFileReadable.NotAFile
 
-	return ErrFileReadable.Ok
+    return ErrFileReadable.Ok
 
 # Author: Yanhui Shen
 # not support screen width now
 # align only support left(1) or right(2)
 def ColPrint(table, space=1, align=[]):
-	#import curses
-	if not table:
-		return
+    #import curses
+    if not table:
+        return
 
-	#colCount = curses.wrapper(lambda _: curses.tigetnum('cols'))
-	colMaxWidth = []
+    #colCount = curses.wrapper(lambda _: curses.tigetnum('cols'))
+    colMaxWidth = []
 
-	# Generate the colMaxWidth
-	for line in table:
-		for idx, col in enumerate(line):
-			colw = len(col)
-			if len(colMaxWidth) <= idx:
-				colMaxWidth.append(colw)
-			elif colw > colMaxWidth[idx]:
-				colMaxWidth[idx] = colw
+    # Generate the colMaxWidth
+    for line in table:
+        for idx, col in enumerate(line):
+            colw = len(col)
+            if len(colMaxWidth) <= idx:
+                colMaxWidth.append(colw)
+            elif colw > colMaxWidth[idx]:
+                colMaxWidth[idx] = colw
 
-	for line in table:
-		for idx, col in enumerate(line):
-			colw = len(col)
-			left = colMaxWidth[idx] - colw
-			leftPad = ' ' * left
-			spacePad = ' ' * space
-			if not align:
-				print(col+leftPad+spacePad, end='')
-			else:
-				if align[idx] == 0:
-					pass
-				elif align[idx] == 1:
-					print(col+leftPad+spacePad, end='')
-				elif align[idx] == 2:
-					print(leftPad+col+spacePad, end='')
+    for line in table:
+        for idx, col in enumerate(line):
+            colw = len(col)
+            left = colMaxWidth[idx] - colw
+            leftPad = ' ' * left
+            spacePad = ' ' * space
+            if not align:
+                print(col+leftPad+spacePad, end='')
+            else:
+                if align[idx] == 0:
+                    pass
+                elif align[idx] == 1:
+                    print(col+leftPad+spacePad, end='')
+                elif align[idx] == 2:
+                    print(leftPad+col+spacePad, end='')
 
-		print('')
+        print('')
 
 def Sha1File(fileName):
-	import hashlib
-	with open(fileName, 'rb') as f:
-		return hashlib.sha1(f.read()).hexdigest()
+    import hashlib
+    with open(fileName, 'rb') as f:
+        return hashlib.sha1(f.read()).hexdigest()
