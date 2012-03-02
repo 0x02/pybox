@@ -62,17 +62,28 @@ def KeySortPathLower(fn):
     return fn.lower().rsplit('/', 1)
 
 # Author: Yanhui Shen
-ErrFileReadable = NewEnum('Ok', 'NotExist', 'PermDenied', 'NotAFile')
+ErrFileAccess = NewEnum('Ok', 'NotExist', 'PermDenied', 'NotAFile')
 def IsFileReadable(filepath, dirisfile=True):
     import os
     if not os.path.exists(filepath):
-        return ErrFileReadable.NotExist
+        return ErrFileAccess.NotExist
     if not os.access(filepath, os.R_OK):
-        return ErrFileReadable.PermDenied
+        return ErrFileAccess.PermDenied
     if (not dirisfile) and (not os.path.isfile(filepath)):
-        return ErrFileReadable.NotAFile
+        return ErrFileAccess.NotAFile
 
-    return ErrFileReadable.Ok
+    return ErrFileAccess.Ok
+
+def IsFileWritable(filepath, dirisfile=True):
+    import os
+    if not os.path.exists(filepath):
+        return ErrFileAccess.NotExist
+    if not os.access(filepath, os.W_OK):
+        return ErrFileAccess.PermDenied
+    if (not dirisfile) and (not os.path.isfile(filepath)):
+        return ErrFileAccess.NotAFile
+
+    return ErrFileAccess.Ok
 
 # Author: Yanhui Shen
 # not support screen width now
