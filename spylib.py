@@ -127,3 +127,11 @@ def Sha1File(fileName):
     import hashlib
     with open(fileName, 'rb') as f:
         return hashlib.sha1(f.read()).hexdigest()
+
+# Author: Yanhui Shen
+def DupItemIndex(listname, item):
+    idxlist = []
+    for idx in range(0, len(listname), 1):
+        if listname[idx] == item:
+            idxlist.append(idx)
+    return idxlist
