@@ -1,1 +1,6 @@
 My shell extensions written in python.
+
+0.spylib    My python lib.
+1.trash     Use trash instead of rm please! 
+2.fync      Smartly sync dira/pathlist => dirb.
+3.cdep      Calculate include dependence for C/CPP.
