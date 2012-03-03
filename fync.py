@@ -90,13 +90,23 @@ def CalcFileHash(pathlist):
     hashlist = [Sha1File(item) for item in pathlist]
     return hashlist
 
+def RmEmptyDirForFile(filename):
+    import os
+    checkparent = False
+    dirname = os.path.dirname(filename)
+    if len(dirname) > 0:
+        try:
+            os.rmdir(dirname)
+            checkparent = True
+        except:
+            checkparent = False
+    if checkparent:
+        RmEmptyDirForFile(dirname)
+
 def SyncCut(fromdir, newpathlist, todir):
     import os
     import shutil
     import uuid
-    if len(newpathlist) <= 0:
-        print(MsgColor.Warning + 'Nothing to sync!' + MsgColor.Endc)
-        return
 
     oldpathlist = PrepareOrCheckDestDir(todir)
     if oldpathlist == None:
@@ -111,14 +121,16 @@ def SyncCut(fromdir, newpathlist, todir):
         for idx in range(len(newhashlist)-1, -1, -1):
             newhash = newhashlist[idx]
             newpath = newpathlist[idx]
-            if newhash in oldhashlist:
-                oldidx = oldhashlist.index(newhash)
+            dupidx = DupItemIndex(oldhashlist, newhash)
+            for oldidx in dupidx:
+                oldpath = oldpathlist[oldidx]
                 topath = os.path.join(todir, newpath[len(fromdir):])
-                if topath == oldpathlist[oldidx]:
+                if topath == oldpath:
                     del oldhashlist[oldidx]
                     del oldpathlist[oldidx]
                     del newhashlist[idx]
                     del newpathlist[idx]
+                    break
 
         # 2.Merge the renamed files.(hash1=hash2, path1<>path2)
         #   Then ignore them!
@@ -135,10 +147,12 @@ def SyncCut(fromdir, newpathlist, todir):
                     tmppath = topath + '.' +uuid.uuid1().hex
                     print(MsgColor.OkGreen + '~ ' + MsgColor.Endc + os.path.relpath(tmppath))
                     shutil.move(topath, tmppath)
+                    RmEmptyDirForFile(topath)
                     oldpathlist[previdx] = tmppath
                 # Now we can mv the old file which has the same hash to our new path.
                 print(MsgColor.OkGreen + '~ ' + MsgColor.Endc + os.path.relpath(topath))
                 shutil.move(oldpath, topath)
+                RmEmptyDirForFile(oldpath)
                 del oldhashlist[oldidx]
                 del oldpathlist[oldidx]
                 del newhashlist[idx]
@@ -170,10 +184,11 @@ def SyncCut(fromdir, newpathlist, todir):
             except:
                 print(MsgColor.Fail + ' Failed!' + MsgColor.Endc)
 
-        # 5.Clear left files in oldpathlist, they are all useless.
+        # 5.Clear files left in oldpathlist, they are all useless.
         for item in oldpathlist:
             print(MsgColor.OkGreen + '- ' + MsgColor.Endc + os.path.relpath(item))
             os.remove(item)
+            RmEmptyDirForFile(item)
                 
     else:
         # Directly copy from a to b.
