@@ -1,4 +1,5 @@
 #!/usr/bin/env python3.2
+#coding:utf-8
 
 from spylib import *
 
@@ -72,28 +73,40 @@ def PrepareOrCheckDestDir(todir):
                 if CheckFileWritable(item):
                     vaildlist.append(item)
             pathlist = vaildlist
-            print(MsgColor.OkGreen + ' Done!', MsgColor.Endc)
+            print(MsgColor.OkGreen + ' Done!' + MsgColor.Endc)
         else:
-            print(MsgColor.Fail + ' Failed!', MsgColor.Endc)
+            print(MsgColor.Fail + ' Failed!' + MsgColor.Endc)
     else:
         print(MsgColor.Warning + 'Preparing dir...' + MsgColor.Endc, end='')
         try:
             os.mkdir(todir, 0o700)
-            print(MsgColor.OkGreen + ' Done!', MsgColor.Endc)
+            print(MsgColor.OkGreen + ' Done!' + MsgColor.Endc)
             pathlist = []
         except:
-            print(MsgColor.Fail + ' Failed!', MsgColor.Endc)
+            print(MsgColor.Fail + ' Failed!' + MsgColor.Endc)
 
     return pathlist
 
 def CalcFileHash(pathlist):
-    hashlist = [Sha1File(item) for item in pathlist]
+    hashlist = []
+    for idx, item in enumerate(pathlist):
+        hashlist.append(Sha1File(item))
+        progress = int((idx+1)/len(pathlist)*100)
+        print(MsgColor.OkGreen + 'Calculating SHA1 hash... ' + MsgColor.Endc + str(progress) + '%', end='\r')
+    if len(pathlist) != 0:
+        print()
+    else:
+        print(MsgColor.OkGreen + 'Calculating SHA1 hash... Nothing to do!' + MsgColor.Endc)
     return hashlist
 
-def RmEmptyDirForFile(filename):
+def RmEmptyDirForFile(filename, stopat):
     import os
     checkparent = False
     dirname = os.path.dirname(filename)
+
+    if os.path.abspath(dirname) == os.path.abspath(stopat):
+        return
+
     if len(dirname) > 0:
         try:
             os.rmdir(dirname)
@@ -101,7 +114,7 @@ def RmEmptyDirForFile(filename):
         except:
             checkparent = False
     if checkparent:
-        RmEmptyDirForFile(dirname)
+        RmEmptyDirForFile(dirname, stopat)
 
 def SyncCut(fromdir, newpathlist, todir):
     import os
@@ -147,12 +160,12 @@ def SyncCut(fromdir, newpathlist, todir):
                     tmppath = topath + '.' +uuid.uuid1().hex
                     print(MsgColor.OkGreen + '~ ' + MsgColor.Endc + os.path.relpath(tmppath))
                     shutil.move(topath, tmppath)
-                    RmEmptyDirForFile(topath)
+                    RmEmptyDirForFile(topath, todir)
                     oldpathlist[previdx] = tmppath
                 # Now we can mv the old file which has the same hash to our new path.
                 print(MsgColor.OkGreen + '~ ' + MsgColor.Endc + os.path.relpath(topath))
                 shutil.move(oldpath, topath)
-                RmEmptyDirForFile(oldpath)
+                RmEmptyDirForFile(oldpath, todir)
                 del oldhashlist[oldidx]
                 del oldpathlist[oldidx]
                 del newhashlist[idx]
@@ -188,7 +201,7 @@ def SyncCut(fromdir, newpathlist, todir):
         for item in oldpathlist:
             print(MsgColor.OkGreen + '- ' + MsgColor.Endc + os.path.relpath(item))
             os.remove(item)
-            RmEmptyDirForFile(item)
+            RmEmptyDirForFile(item, todir)
                 
     else:
         # Directly copy from a to b.
