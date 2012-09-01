@@ -2,10 +2,6 @@
 
 import sys, os
 
-if len(sys.argv) < 2:
-    print("Need more arguments!")
-    sys.exit(-1)
-
 path = ""
 names = ""
 for arg in sys.argv[1:]:
@@ -21,6 +17,6 @@ for arg in sys.argv[1:]:
 if not path:
     path = "."
 
-find = "find %s %s | xargs wc -l | sort -k 4" %(path, names)
+find = "find %s %s | xargs wc -l | sort -k 2" %(path, names)
 print(find)
 os.system(find)
