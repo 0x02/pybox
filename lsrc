@@ -4,7 +4,11 @@ import sys, os
 
 path = ""
 names = ""
+lsOnly = False
 for arg in sys.argv[1:]:
+    if (arg == "-l"):
+        lsOnly = True
+        continue
     if (arg.startswith('/')
             or arg.startswith('./')
             or arg.startswith('~/')
@@ -17,6 +21,10 @@ for arg in sys.argv[1:]:
 if not path:
     path = "."
 
-find = "find %s %s | xargs wc -l | sort -k 2" %(path, names)
-print(find)
+if lsOnly:
+    find = "find %s %s" %(path, names)
+else:
+    find = "find %s %s | xargs wc -l | sort -k 2" %(path, names)
+    print(find)
+
 os.system(find)
