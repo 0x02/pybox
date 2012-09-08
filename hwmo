@@ -1,0 +1,74 @@
+#!/usr/bin/env python3.2
+
+import sys, os
+import struct
+from ctypes import *
+
+cdll.LoadLibrary("libc.so")
+libc = CDLL("libc.so")
+
+def SysctlInt(key):
+    key = bytes(key, "ascii")
+    data = c_int(0)
+    size = c_size_t(sizeof(data))
+    libc.sysctlbyname(key, byref(data), byref(size), None, 0)
+    return data.value
+
+def SysctlIntArray(key):
+    key = bytes(key, "ascii")
+    size = c_size_t(0)
+    libc.sysctlbyname(key, None, byref(size), None, 0)
+    data = create_string_buffer(size.value)
+    libc.sysctlbyname(key, byref(data), byref(size), None, 0)
+
+    count = int(size.value / sizeof(c_int))
+    array = [None] * count
+    for i in range(count):
+        array[i] = struct.unpack("b", data[i*sizeof(c_int)])[0]
+    return array
+
+def SysctlStr(key):
+    key = bytes(key, "ascii")
+    size = c_size_t(0)
+    libc.sysctlbyname(key, None, byref(size), None, 0)
+    data = create_string_buffer(size.value)
+    libc.sysctlbyname(key, byref(data), byref(size), None, 0)
+    return str(data.value, "ascii")
+
+ctl_fanspeed = "dev.acpi_ibm.0.fan_speed"
+ctl_cpufreq = "dev.cpu.0.freq"
+ctl_thermal = "dev.acpi_ibm.0.thermal"
+
+#print(SysctlInt("dev.acpi_ibm.0.fan_speed"))
+#print(SysctlInt("dev.cpu.0.freq"))
+#print(SysctlIntArray("dev.acpi_ibm.0.thermal"))
+#print(SysctlStr("kern.ostype"))
+
+import curses 
+import locale
+
+locale.setlocale(locale.LC_ALL,"")
+
+myscreen = curses.initscr()
+curses.curs_set(0)
+curses.halfdelay(1)
+
+ch = -1
+while ch == -1:
+    ch = myscreen.getch()
+
+    fanspeed = SysctlInt(ctl_fanspeed)
+    cpufreq = SysctlInt(ctl_cpufreq)
+    thermal = SysctlIntArray(ctl_thermal)
+
+    lines = []
+    lines.append( "Fan Speed: %4.d RPM" %(fanspeed) )
+    lines.append( "CPU Freq: %4.d Mhz" %(cpufreq) )
+    lines.append( "CPU: %2.d  PCI: %2.d  HDD: %2.d" %(thermal[0], thermal[1], thermal[2]) )
+
+    myscreen.erase()
+    for i in range(len(lines)):
+        myscreen.addstr(i, 1, lines[i])
+    myscreen.refresh()
+   
+curses.endwin()
