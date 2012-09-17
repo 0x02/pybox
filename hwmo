@@ -50,12 +50,17 @@ import locale
 locale.setlocale(locale.LC_ALL,"")
 
 myscreen = curses.initscr()
+myscreen.keypad(1)
+curses.cbreak()
+curses.noecho()
 curses.curs_set(0)
-curses.halfdelay(1)
+curses.halfdelay(10)
 
-ch = -1
-while ch == -1:
+while True:
     ch = myscreen.getch()
+
+    if ch != curses.ERR:
+        break
 
     fanspeed = SysctlInt(ctl_fanspeed)
     cpufreq = SysctlInt(ctl_cpufreq)
