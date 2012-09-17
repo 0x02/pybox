@@ -1,0 +1,29 @@
+#!/usr/bin/env python3.2
+
+import sys, os
+import argparse
+import uuid
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-f", metavar="encoding", dest="cs_from", required=True)
+    parser.add_argument("-t", metavar="encoding", dest="cs_to", default="UTF-8")
+    parser.add_argument(dest="cs_files", metavar="file", nargs="+")
+    args = parser.parse_args()
+
+    for cs_file in args.cs_files:
+        uid = uuid.uuid1()
+        tmp = "/tmp/iconv-txt.%s" %(uid)
+        cmds = [
+                "iconv -f %s -t %s \"%s\" > %s" %(args.cs_from, args.cs_to, cs_file, tmp),
+                "mv %s \"%s\"" %(tmp, cs_file)]
+        for cmd in cmds:
+            print(cmd)
+            err = os.system(cmd)
+            if err != 0:
+                print("Failed!")
+                sys.exit(err)
+    print("Done.")
+
+if __name__ == "__main__":
+    main()
