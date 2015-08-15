@@ -1,11 +1,11 @@
-#!/usr/bin/env python3.3
+#!/usr/bin/env python3
 
 import sys, os
 import struct
 from ctypes import *
 
-cdll.LoadLibrary("libc.so")
-libc = CDLL("libc.so")
+cdll.LoadLibrary("libc.so.7")
+libc = CDLL("libc.so.7")
 
 def SysctlInt(key):
     key = bytes(key, "ascii")
