@@ -1,0 +1,102 @@
+#!/usr/bin/env python2.7
+
+import argparse
+import subprocess
+import os
+import glob
+import re
+import bs4
+import urllib3
+import urlparse
+
+lspkg = 'mat = installed.packages(lib.loc = "/zfs/app/R/library/"); print(unname(mat[,c("Package","Version")]))'
+
+def run_command(command):
+    p = subprocess.Popen(command,
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.STDOUT)
+    out, err = p.communicate()
+    return out
+
+def update(pdfdic, pkg):
+    # find new version
+    fmt_url = "http://cran.r-project.org/web/packages/{0}/"
+    url = fmt_url.format(pkg)
+
+    http = urllib3.PoolManager()
+    r = http.request("GET", url)
+    html = r.data
+    soup = bs4.BeautifulSoup(html)
+
+    tbs = soup.find_all("table")
+    if len(tbs) == 0:
+        print("Package not found: {0}".format(pkg))
+        return
+
+    tb = tbs[0]
+    tr = tb.find_all("tr")[0]
+    td = tr.find_all("td")[1]
+    version = str(td.contents[0])
+
+    tb = tbs[1]
+    tr = tb.find_all("tr")[0]
+    td = tr.find_all("td")[1]
+    a = td.find_all("a")[0]
+    pdfurl = str(a.attrs['href'])
+    pdfurl = urlparse.urljoin(url, pdfurl)
+
+    # check old versions
+    hasnew = True
+    if pkg in pdfdic:
+        vers = pdfdic[pkg]
+        if version in vers:
+            hasnew = False
+
+    # fetch new version
+    fmt_pdffile = "{0}-{1}.pdf"
+    if hasnew:
+        pdffile = fmt_pdffile.format(pkg, version)
+        r = http.request("GET", pdfurl)
+        if r.status == 200:
+            print("+ {0}".format(pdffile))
+            with open(pdffile, "w") as f:
+                f.write(r.data)
+        else:
+            print("Failed to download: {0}".format(pdfurl))
+            return
+
+    # remove old versions
+    if hasnew and pkg in pdfdic:
+        for ver in pdfdic[pkg]:
+            if ver != version:
+                if len(ver) <= 0:
+                    fmt_pdffile = "{0}.pdf"
+                pdffile = fmt_pdffile.format(pkg, ver)
+                print("- {0}".format(pdffile))
+                os.remove(pdffile)
+
+def main():
+    # build pkg-ver dictionary
+    pdfs = glob.glob("*.pdf")
+    pdfdic = {}
+    for pdf in pdfs:
+        pkgver = os.path.splitext(pdf)[0].split("-", 1)
+        if (len(pkgver) == 2):
+            pkg, ver = pkgver
+        else:
+            (pkg,) = pkgver
+            ver = ""
+        if pkg not in pdfdic:
+            pdfdic[pkg] = []
+        pdfdic[pkg].append(ver)
+
+    out = run_command(["Rscript", "-e", lspkg])
+    lines = out.split("\n")[1:-1]
+    for line in lines:
+        cols = line.split()[1]
+        pkg = cols[1:-1]
+        print(pkg)
+        update(pdfdic, pkg)
+
+if __name__ == "__main__":
+    main()
