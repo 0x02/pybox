@@ -2,6 +2,7 @@
 
 import argparse
 import subprocess
+import sys
 import os
 import glob
 import re
@@ -19,18 +20,21 @@ def run_command(command):
     return out
 
 def update(pdfdic, pkg):
+    sys.stdout.write("checking {0}... ".format(pkg))
+    sys.stdout.flush()
+
     # find new version
     fmt_url = "http://cran.r-project.org/web/packages/{0}/"
     url = fmt_url.format(pkg)
 
-    http = urllib3.PoolManager()
-    r = http.request("GET", url)
+    pool = urllib3.PoolManager()
+    r = pool.request("GET", url)
     html = r.data
-    soup = bs4.BeautifulSoup(html)
+    soup = bs4.BeautifulSoup(html, "html.parser")
 
     tbs = soup.find_all("table")
     if len(tbs) == 0:
-        print("Package not found: {0}".format(pkg))
+        sys.stdout.write("package not found!\n")
         return
 
     tb = tbs[0]
@@ -52,27 +56,32 @@ def update(pdfdic, pkg):
         if version in vers:
             hasnew = False
 
+    if not hasnew:
+        sys.stdout.write("\n")
+        return
+
     # fetch new version
     fmt_pdffile = "{0}-{1}.pdf"
-    if hasnew:
-        pdffile = fmt_pdffile.format(pkg, version)
-        r = http.request("GET", pdfurl)
-        if r.status == 200:
-            print("+ {0}".format(pdffile))
-            with open(pdffile, "w") as f:
-                f.write(r.data)
-        else:
-            print("Failed to download: {0}".format(pdfurl))
-            return
+    pdffile = fmt_pdffile.format(pkg, version)
+    r = pool.request("GET", pdfurl)
+    if r.status == 200:
+        sys.stdout.write("+{0}".format(pdffile))
+        sys.stdout.flush()
+        with open(pdffile, "w") as f:
+            f.write(r.data)
+    else:
+        sys.stdout.write("failed to download from: {0}".format(pdfurl))
+        sys.stdout.flush()
+        return
 
     # remove old versions
-    if hasnew and pkg in pdfdic:
+    if pkg in pdfdic:
         for ver in pdfdic[pkg]:
             if ver != version:
                 if len(ver) <= 0:
                     fmt_pdffile = "{0}.pdf"
                 pdffile = fmt_pdffile.format(pkg, ver)
-                print("- {0}".format(pdffile))
+                sys.stdout.write(" -{0}\n".format(pdffile))
                 os.remove(pdffile)
 
 def main():
@@ -95,7 +104,6 @@ def main():
     for line in lines:
         cols = line.split()[1]
         pkg = cols[1:-1]
-        print(pkg)
         update(pdfdic, pkg)
 
 if __name__ == "__main__":
