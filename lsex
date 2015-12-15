@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.3
+#!/usr/bin/env python3
 
 import sys, os
 
@@ -17,14 +17,14 @@ for arg in sys.argv[1:]:
         continue
     if names:
         names += "-o "
-    names += "-name \"*.%s\" " % arg
+    names += "-name \"*.{}\" ".format(arg)
 if not path:
-    path = "."
+    path = "./"
 
 if lsOnly:
-    find = "find %s %s" %(path, names)
+    find = "find {} {} -type f ".format(path, names)
 else:
-    find = "find %s %s | xargs wc -l | sort -k 2" %(path, names)
+    find = "find {} {} -type f | xargs wc -l | sort -k 2".format(path, names)
     print(find)
 
 os.system(find)
